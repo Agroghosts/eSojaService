@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres-esoja
+    environment:
+      - POSTGRES_DB=esoja
+      - POSTGRES_USER=docker
+      - POSTGRES_PASSWORD=docker
+    ports:
+      - '5432:5432'
+  redis:
+    image: redis
+    container_name: redis-esoja
+    command: redis-server --requirepass ${REDIS_PASS}
+    ports:
+      - '6379:6379'

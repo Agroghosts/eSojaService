@@ -1,0 +1,152 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String            @id @default(uuid())
+  socialId             String?           @unique
+  email                String            @unique
+  name                 String
+  password             String?
+  provider             enumProviderUser?
+  role                 enumUserRoles     @default(owner)
+  picture              String?
+  passwordResetToken   String?
+  passwordResetExpires String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  properties Property[]
+
+  @@map("users")
+}
+
+model Property {
+  id        String  @id @default(uuid())
+  name      String
+  zipcode   String
+  latitude  Float
+  longitude Float
+  picture   String?
+  city      String?
+  state     String?
+  ibgeCode  String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  cultives Cultive[]
+  user     User?     @relation(fields: [userId], references: [id])
+  userId   String?
+
+  @@map("properties")
+}
+
+model Cultive {
+  id                      String            @id @default(uuid())
+  areaTotal               Float
+  idCultivar              Int?
+  cropYear                String
+  plantingDate            String
+  plantsPerMeter          Int?
+  expectedProduction      Float?
+  expectedBagsPerHectares Float?
+  metersBetweenPlants     Float?
+  description             String?
+  photo                   String?
+  status                  enumCultiveStatus @default(pending)
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime?         @updatedAt
+
+  samples                  CultiveSamples[]
+  coordinates              CultiveCoordinates[]
+  cultiveProductionAgritec CultiveProductionAgritec[]
+  property                 Property?                  @relation(onDelete: Cascade, onUpdate: Cascade, fields: [propertyId], references: [id])
+  propertyId               String?
+
+  @@map("cultives")
+}
+
+model CultiveProductionAgritec {
+  id   String @id @default(uuid())
+  data Json?
+
+  cultive   Cultive @relation(onDelete: Cascade, fields: [cultiveId], references: [id])
+  cultiveId String
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  @@map("cultiveProductionAgritec")
+}
+
+model CultiveCoordinates {
+  id        String @id @default(uuid())
+  latitude  Float
+  longitude Float
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  cultive   Cultive @relation(onDelete: Cascade, fields: [cultiveId], references: [id])
+  cultiveId String
+
+  @@map("cultiveCoordinates")
+}
+
+model CultiveSamples {
+  id           String  @id @default(uuid())
+  name         String
+  description  String?
+  grainsPlant1 Int
+  grainsPlant2 Int
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  cultive   Cultive? @relation(onDelete: Cascade, fields: [cultiveId], references: [id])
+  cultiveId String?
+
+  @@map("cultiveSamples")
+}
+
+model ImeaLogs {
+  id   String        @id @default(uuid())
+  data Json?
+  type ImeaLogsTypes
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  @@map("imeaLogs")
+}
+
+enum ImeaLogsTypes {
+  conventionalSeed
+  availableSoybeanPack
+}
+
+enum enumCultiveStatus {
+  pending
+  inProduction
+  finished
+}
+
+enum enumUserRoles {
+  owner
+  admin
+}
+
+enum enumProviderUser {
+  google
+  facebook
+}
